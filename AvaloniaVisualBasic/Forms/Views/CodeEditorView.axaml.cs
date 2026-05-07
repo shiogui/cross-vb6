@@ -45,7 +45,7 @@ public partial class CodeEditorView : UserControl
         using var reader = new XmlTextReader(xshdContent);
         var xshd = HighlightingLoader.LoadXshd(reader);
         var highlightingDefinition = HighlightingLoader.Load(xshd, HighlightingManager.Instance);
-        HighlightingManager.Instance.RegisterHighlighting("VB6", new[] { ".vb6", ".bas", ".frm", ".cls" }, highlightingDefinition);
+        HighlightingManager.Instance.RegisterHighlighting("VB6", [".vb6", ".bas", ".frm", ".cls"], highlightingDefinition);
     }
     
     public CodeEditorView()

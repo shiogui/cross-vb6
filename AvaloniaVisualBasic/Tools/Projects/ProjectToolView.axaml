@@ -42,8 +42,8 @@
                         <TextBlock FontWeight="{CompiledBinding IsStartupProject, Converter={StaticResource ProjectTitleConverter}}">
                             <TextBlock.Text>
                                 <MultiBinding Converter="{StaticResource StringFormatConverter}">
-                                    <CompiledBinding Path="Name" />
-                                    <CompiledBinding Path="File" />
+                                    <Binding Path="Name" />
+                                    <Binding Path="File" />
                                 </MultiBinding>
                             </TextBlock.Text>
                         </TextBlock>
@@ -64,8 +64,8 @@
                         <TextBlock>
                             <TextBlock.Text>
                                 <MultiBinding Converter="{StaticResource StringFormatConverter}">
-                                    <CompiledBinding Path="Name" />
-                                    <CompiledBinding Path="File" />
+                                    <Binding Path="Name" />
+                                    <Binding Path="File" />
                                 </MultiBinding>
                             </TextBlock.Text>
                         </TextBlock>

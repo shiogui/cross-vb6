@@ -7,4 +7,5 @@
         x:Class="AvaloniaVisualBasic.IDE.DialogWindow"
         x:DataType="ide:IDialog"
         CanResize="{CompiledBinding CanResize}"
+        SystemDecorations="None"
         Title="{CompiledBinding Title}" />
