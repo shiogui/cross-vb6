@@ -73,7 +73,7 @@ public class MDIHostPanel : Panel
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
-        if (TopLevel.GetTopLevel(this) is Window window)
+        if (this.GetVisualRoot() is Window window)
         {
             hostWindowIsActiveDisposable = window.GetObservable(Window.IsActiveProperty)
                 .Subscribe(new ActionObserver<bool>(@is =>
@@ -176,7 +176,7 @@ public class MDIHostPanel : Panel
                     child.RaiseEvent(new ActiveWidowChangedEventArgs(MDIHost.ActiveWindowChangedEvent, child, mdiWindow, false));
             }
 
-            if (topZ != null && (TopLevel.GetTopLevel(this) is Window { IsActive: true } || TopLevel.GetTopLevel(this) is not Window))
+            if (topZ != null && (this.GetVisualRoot() is Window { IsActive: true } || this.GetVisualRoot() is not Window))
             {
                 SetIsActive(topZ, true);
                 if (topZ is MDIWindow mdiWindow)

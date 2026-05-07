@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <AvaloniaVersion>11.3.13</AvaloniaVersion>
-        <ClassicAvaloniaVersion>11.3.0.3</ClassicAvaloniaVersion>
-        <DotNetVersion>net10.0</DotNetVersion>
-        <DotNetVersionDesktop>net10.0</DotNetVersionDesktop>
-        <DotNetVersionBrowser>net10.0-browser</DotNetVersionBrowser>
-        <DotNetVersionAndroid>net10.0-android</DotNetVersionAndroid>
-        <DotNetVersioniOS>net10.0-ios</DotNetVersioniOS>
-        <DockVersion>11.3.0.12</DockVersion>
-        <NuGetAudit>false</NuGetAudit>
+        <AvaloniaVersion>11.2.1</AvaloniaVersion>
+        <ClassicAvaloniaVersion>11.2.0.6</ClassicAvaloniaVersion>
+        <DotNetVersion>net8.0;net9.0</DotNetVersion>
+        <DotNetVersionDesktop>net9.0</DotNetVersionDesktop>
+        <DotNetVersionBrowser>net9.0-browser</DotNetVersionBrowser>
+        <DotNetVersionAndroid>net9.0-android</DotNetVersionAndroid>
+        <DotNetVersioniOS>net9.0-ios</DotNetVersioniOS>
+        <DockVersion>11.2.0</DockVersion>
     </PropertyGroup>
 </Project>

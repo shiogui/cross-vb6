@@ -5,5 +5,5 @@ namespace AvaloniaVisualBasic.Utils;
 
 public partial class EditorToolBase : Tool
 {
-    // [Notify] private bool isActive;
+    [Notify] private bool isActive;
 }

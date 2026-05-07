@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFrameworks>$(DotNetVersion)</TargetFrameworks>
         <Nullable>enable</Nullable>
@@ -23,7 +23,7 @@
             <Version>4.13.1</Version>
         </PackageReference>
         <PackageReference Include="Antlr4BuildTasks">
-            <Version>12.14.0</Version>
+            <Version>12.8.0</Version>
         </PackageReference>
     </ItemGroup>
 

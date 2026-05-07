@@ -46,8 +46,7 @@ public partial class App : Application
 
                 desktop.MainWindow = new ClassicWindow()
                 {
-                    Content = Static.MainView,
-                    SystemDecorations = Avalonia.Controls.SystemDecorations.None
+                    Content = Static.MainView
                 };
 
                 rootViewModel.ObservePropertyChanged(x => x.Title)

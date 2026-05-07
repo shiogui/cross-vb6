@@ -2,6 +2,8 @@ using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Chrome;
+using Avalonia.Controls.Primitives;
+using Avalonia.VisualTree;
 using AvaloniaVisualBasic.Utils;
 
 namespace AvaloniaVisualBasic.Controls;
@@ -12,7 +14,7 @@ public class MDICaptionButtons : CaptionButtons
 
     private IDisposable? disposables;
 
-    private Button? closeButton = null;
+    private Button? closeButton;
 
     private void Attach(MDIWindow hostWindow)
     {
@@ -33,77 +35,80 @@ public class MDICaptionButtons : CaptionButtons
 
     private new void Detach()
     {
-        disposables?.Dispose();
-        disposables = null;
+        if (disposables != null)
+        {
+            disposables.Dispose();
+            disposables = null;
+        }
     }
 
-    // protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
-    // {
-    //     base.OnAttachedToVisualTree(e);
-    //     if (FindHost() is { } host)
-    //         Attach(host);
-    // }
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        if (FindHost() is { } host)
+            Attach(host);
+    }
 
-    // protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
-    // {
-    //     base.OnDetachedFromVisualTree(e);
-    //     Detach();
-    // }
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        Detach();
+    }
 
-    // protected override void OnClose()
-    // {
-    //     base.OnClose();
-    //     if (FindHost() is { } window)
-    //         window.CloseCommand?.Execute(window.CloseCommandParameter);
-    // }
+    protected override void OnClose()
+    {
+        base.OnClose();
+        if (FindHost() is { } window)
+            window.CloseCommand?.Execute(window.CloseCommandParameter);
+    }
 
-    // protected override void OnMinimize()
-    // {
-    //     base.OnMinimize();
-    //     if (FindHost() is { } window)
-    //     {
-    //         if (MDIHostPanel.GetWindowState(window) == WindowState.Minimized)
-    //         {
-    //             MDIHostPanel.SetOldMinimizedWindowLocation(window, MDIHostPanel.GetWindowLocation(window));
-    //             MDIHostPanel.SetWindowLocation(window, MDIHostPanel.GetOldWindowLocation(window));
-    //             MDIHostPanel.SetWindowState(window,  WindowState.Normal);
-    //         }
-    //         else
-    //         {
-    //             MDIHostPanel.SetOldWindowLocation(window, MDIHostPanel.GetWindowLocation(window));
-    //             MDIHostPanel.SetWindowState(window,  WindowState.Minimized);
-    //             if (MDIHostPanel.GetOldMinimizedWindowLocation(window) is { } oldMinimizedWindowLocation)
-    //                 MDIHostPanel.SetWindowLocation(window, oldMinimizedWindowLocation);
-    //             else if (this.FindAncestorOfType<MDIHostPanel>() is { } hostPanel)
-    //                 MDIHostPanel.SetWindowLocation(window, new Point(0, hostPanel.Bounds.Height - window.MinHeight));
-    //         }
-    //     }
-    // }
+    protected override void OnMinimize()
+    {
+        base.OnMinimize();
+        if (FindHost() is { } window)
+        {
+            if (MDIHostPanel.GetWindowState(window) == WindowState.Minimized)
+            {
+                MDIHostPanel.SetOldMinimizedWindowLocation(window, MDIHostPanel.GetWindowLocation(window));
+                MDIHostPanel.SetWindowLocation(window, MDIHostPanel.GetOldWindowLocation(window));
+                MDIHostPanel.SetWindowState(window,  WindowState.Normal);
+            }
+            else
+            {
+                MDIHostPanel.SetOldWindowLocation(window, MDIHostPanel.GetWindowLocation(window));
+                MDIHostPanel.SetWindowState(window,  WindowState.Minimized);
+                if (MDIHostPanel.GetOldMinimizedWindowLocation(window) is { } oldMinimizedWindowLocation)
+                    MDIHostPanel.SetWindowLocation(window, oldMinimizedWindowLocation);
+                else if (this.FindAncestorOfType<MDIHostPanel>() is { } hostPanel)
+                    MDIHostPanel.SetWindowLocation(window, new Point(0, hostPanel.Bounds.Height - window.MinHeight));
+            }
+        }
+    }
 
-    // protected override void OnRestore()
-    // {
-    //     base.OnRestore();
-    //     if (FindHost() is { } window)
-    //     {
-    //         if (MDIHostPanel.GetWindowState(window) == WindowState.Maximized)
-    //         {
-    //             MDIHostPanel.SetWindowState(window,  WindowState.Normal);
-    //         }
-    //         else
-    //         {
-    //             MDIHostPanel.SetWindowState(window,  WindowState.Maximized);
-    //         }
-    //     }
-    // }
+    protected override void OnRestore()
+    {
+        base.OnRestore();
+        if (FindHost() is { } window)
+        {
+            if (MDIHostPanel.GetWindowState(window) == WindowState.Maximized)
+            {
+                MDIHostPanel.SetWindowState(window,  WindowState.Normal);
+            }
+            else
+            {
+                MDIHostPanel.SetWindowState(window,  WindowState.Maximized);
+            }
+        }
+    }
 
-    // protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
-    // {
-    //     base.OnApplyTemplate(e);
-    //     closeButton = e.NameScope.Get<Button>("PART_CloseButton");
-    // }
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+    {
+        base.OnApplyTemplate(e);
+        closeButton = e.NameScope.Get<Button>("PART_CloseButton");
+    }
 
-    // private MDIWindow? FindHost()
-    // {
-    //     return this.FindAncestorOfType<MDIWindow>();
-    // }
+    private MDIWindow? FindHost()
+    {
+        return this.FindAncestorOfType<MDIWindow>();
+    }
 }
