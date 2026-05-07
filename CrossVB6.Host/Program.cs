@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Raylib_cs;
 
 namespace CrossVB6.Host;
@@ -76,7 +76,7 @@ public static class Program
         
         StartWatcher();
         
-        Raylib.InitWindow(800, 450, "Raylib [C#]");
+        Raylib.InitWindow(1024, 768, "CrossVB6 - Raylib");
         Raylib.SetTargetFPS(60);
         
         LoadLibrary();
