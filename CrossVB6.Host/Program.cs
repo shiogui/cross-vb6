@@ -9,6 +9,7 @@ public static class Program
     private static DateTime _lastReload = DateTime.MinValue;
     private static Action? _updateDelegate;
     private static FileSystemWatcher? _watcher;
+    private static string _assemblyPath;
     
     private const string ProjectName = "CrossVB6";
     private const string AssemblyPath = $"{ProjectName}.dll";
@@ -22,7 +23,7 @@ public static class Program
 
     private static void StartWatcher()
     {
-        _watcher = new FileSystemWatcher(AppDomain.CurrentDomain.BaseDirectory);
+        _watcher = new FileSystemWatcher(_assemblyPath);
         _watcher.Filter = AssemblyPath;
         _watcher.NotifyFilter = NotifyFilters.LastWrite;
         _watcher.Changed += (_, _) =>
@@ -36,7 +37,7 @@ public static class Program
     
     private static void LoadLibrary()
     {
-        var fileData = File.ReadAllBytes(AssemblyPath);
+        var fileData = File.ReadAllBytes($"{_assemblyPath}{AssemblyPath}");
         var assembly = Assembly.Load(fileData);
        
         var type = assembly.GetType($"{ProjectName}.IDE");
@@ -71,6 +72,8 @@ public static class Program
     
     public static void Main()
     {
+        _assemblyPath = AppDomain.CurrentDomain.BaseDirectory;
+        
         StartWatcher();
         
         Raylib.InitWindow(800, 450, "Raylib [C#]");
