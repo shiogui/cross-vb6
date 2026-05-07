@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run" type="RunDotNetWatch" factoryName="RunDotNetWatch">
+    <option name="exePath" value="$PROJECT_DIR$/CrossVB6.Host/bin/Debug/net10.0/CrossVB6.Host" />
+    <option name="programParameters" value="" />
+    <option name="projectFilePath" value="$PROJECT_DIR$/CrossVB6.Host/CrossVB6.Host.csproj" />
+    <option name="projectTfm" value="net10.0" />
+    <option name="terminalMode" value="Auto" />
+    <option name="watchParameters" value="" />
+    <option name="workingDirectory" value="$PROJECT_DIR$/CrossVB6.Host/bin/Debug/net10.0" />
+    <method v="2" />
+  </configuration>
+</component>
