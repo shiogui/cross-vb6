@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Collections.Generic;
 using System.Numerics;
 using Raylib_cs;
 
@@ -12,8 +14,57 @@ public class IDE
     private Color darkGray = new Color(128, 128, 128, 255);
     private Color lightGray = new Color(223, 223, 223, 255);
 
+    private Dictionary<string, Texture2D> textures = new();
+    private Font msSansSerif;
+
     public IDE()
     {
+        string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        string fontPath = Path.GetFullPath(Path.Combine(baseDir, "../../../../AvaloniaVisualBasic/Resources/MS-Sans-Serif.ttf"));
+        
+        if (File.Exists(fontPath))
+        {
+            msSansSerif = Raylib.LoadFontEx(fontPath, 13, null, 0);
+        }
+        else
+        {
+            msSansSerif = Raylib.GetFontDefault();
+        }
+
+        string iconsDir = Path.GetFullPath(Path.Combine(baseDir, "../../../../AvaloniaVisualBasic/Icons"));
+        string[] iconsToLoad = {
+            "cursor.gif", "picture.gif", "label.gif", "textbox.gif", "groupbox.gif",
+            "button.gif", "checkbox.gif", "radio.gif", "combo.gif", "listbox.gif",
+            "hscroll.gif", "vscroll.gif", "timer.gif", "drives.gif", "directories.gif",
+            "files.gif", "shape.gif", "line.gif", "image.gif", "data.gif", "ole.gif",
+            "addproject.gif", "addform.gif", "menubar.gif", "open.gif", "save.gif",
+            "cut.gif", "copy.gif", "paste.gif", "find.gif", "undo.gif", "redo.gif",
+            "play.gif", "pause.gif", "stop.gif", "projectexplorer.gif", "properties.gif",
+            "formlayout.gif", "objectbrowser.gif", "toolbox.gif", "dataview.gif", "visualcomponent.gif",
+            "project_folder.gif", "form.gif", "project.gif", "viewcode.gif", "viewobject.gif", "folder.gif"
+        };
+
+        if (Directory.Exists(iconsDir))
+        {
+            foreach (var icon in iconsToLoad)
+            {
+                string path = Path.Combine(iconsDir, icon);
+                if (File.Exists(path))
+                {
+                    textures[icon] = Raylib.LoadTexture(path);
+                }
+            }
+        }
+    }
+
+    private void DrawText(string text, int x, int y, Color color, bool bold = false)
+    {
+        // MS Sans Serif 13 usually corresponds to size 13 in Raylib context too.
+        Raylib.DrawTextEx(msSansSerif, text, new Vector2(x, y), 13, 0, color);
+        if (bold)
+        {
+            Raylib.DrawTextEx(msSansSerif, text, new Vector2(x + 1, y), 13, 0, color);
+        }
     }
 
     internal void UpdateAndDraw()
@@ -39,7 +90,7 @@ public class IDE
         DrawToolbox(0, topOffset, toolboxWidth, workspaceHeight);
 
         // 4. Right Panels
-        int rightPanelWidth = 200;
+        int rightPanelWidth = 220;
         int rightPanelX = screenWidth - rightPanelWidth;
         
         int projExplorerHeight = workspaceHeight / 3;
@@ -70,8 +121,8 @@ public class IDE
         int currentX = x + 8;
         foreach (var menu in menus)
         {
-            Raylib.DrawText(menu, currentX, y + 5, 10, Color.Black);
-            currentX += Raylib.MeasureText(menu, 10) + 16;
+            DrawText(menu, currentX, y + 4, Color.Black);
+            currentX += (int)Raylib.MeasureTextEx(msSansSerif, menu, 13, 0).X + 16;
         }
     }
 
@@ -80,44 +131,73 @@ public class IDE
         Raylib.DrawRectangle(x, y, width, height, bgColor);
         Draw3DBorder(x, y, width, height, false);
 
+        string[] toolbarIcons = {
+            "addproject.gif", "addform.gif", "menubar.gif", "SEP",
+            "open.gif", "save.gif", "SEP",
+            "cut.gif", "copy.gif", "paste.gif", "find.gif", "SEP",
+            "undo.gif", "redo.gif", "SEP",
+            "play.gif", "pause.gif", "stop.gif", "SEP",
+            "projectexplorer.gif", "properties.gif", "formlayout.gif", "objectbrowser.gif", "toolbox.gif", "dataview.gif", "visualcomponent.gif"
+        };
+
         int buttonSize = 22;
         int currentX = x + 5;
-        for (int i = 0; i < 20; i++)
+        foreach (var icon in toolbarIcons)
         {
-            if (i == 3 || i == 8 || i == 12 || i == 16)
+            if (icon == "SEP")
             {
-                // separator
                 Draw3DBorder(currentX, y + 2, 2, height - 4, false);
                 currentX += 6;
+                continue;
             }
+
             Draw3DBorder(currentX, y + 3, buttonSize, buttonSize, false);
-            
-            // tiny icon rect
-            Raylib.DrawRectangle(currentX + 4, y + 7, buttonSize - 8, buttonSize - 8, Color.Gray);
+            if (textures.TryGetValue(icon, out Texture2D tex))
+            {
+                int dx = currentX + (buttonSize - tex.Width) / 2;
+                int dy = y + 3 + (buttonSize - tex.Height) / 2;
+                Raylib.DrawTexture(tex, dx, dy, Color.White);
+            }
             
             currentX += buttonSize + 2;
         }
         
-        // draw position and size coordinates to simulate VB6 toolbar
-        Raylib.DrawText("0, 0", width - 150, y + 8, 10, Color.Black);
-        Raylib.DrawText("4800 x 3600", width - 80, y + 8, 10, Color.Black);
+        DrawText("0, 0", width - 150, y + 8, Color.Black);
+        DrawText("4800 x 3600", width - 80, y + 8, Color.Black);
     }
 
     private void DrawToolbox(int x, int y, int width, int height)
     {
         DrawWindowFrame(x, y, width, height, "General", false);
         
-        // Draw toolbox grid
-        int startX = x + 4;
+        string[] toolboxIcons = {
+            "cursor.gif", "picture.gif", "label.gif", "textbox.gif", "groupbox.gif",
+            "button.gif", "checkbox.gif", "radio.gif", "combo.gif", "listbox.gif",
+            "hscroll.gif", "vscroll.gif", "timer.gif", "drives.gif", "directories.gif",
+            "files.gif", "shape.gif", "line.gif", "image.gif", "data.gif", "ole.gif"
+        };
+
+        int startX = x + 10;
         int startY = y + 22;
         int itemSize = 24;
         
-        for (int i=0; i<10; i++) {
-            for (int j=0; j<2; j++) {
-                int bx = startX + j*(itemSize + 4);
-                int by = startY + i*(itemSize + 4);
-                Draw3DBorder(bx, by, itemSize, itemSize, false);
-                Raylib.DrawRectangle(bx + 4, by + 4, itemSize - 8, itemSize - 8, Color.Gray);
+        for (int i=0; i<toolboxIcons.Length; i++) {
+            int col = i % 2;
+            int row = i / 2;
+            int bx = startX + col*(itemSize + 10);
+            int by = startY + row*(itemSize + 4);
+
+            if (i == 0) // pointer is usually selected
+            {
+                Raylib.DrawRectangle(bx, by, itemSize, itemSize, lightGray);
+                Draw3DBorder(bx, by, itemSize, itemSize, true);
+            }
+            
+            if (textures.TryGetValue(toolboxIcons[i], out Texture2D tex))
+            {
+                int dx = bx + (itemSize - tex.Width) / 2;
+                int dy = by + (itemSize - tex.Height) / 2;
+                Raylib.DrawTexture(tex, dx, dy, Color.White);
             }
         }
     }
@@ -125,15 +205,30 @@ public class IDE
     private void DrawProjectExplorer(int x, int y, int width, int height)
     {
         DrawWindowFrame(x, y, width, height, "Project - Project1", true);
-        Raylib.DrawRectangle(x + 2, y + 20, width - 4, height - 22, Color.White);
-        Draw3DBorder(x + 2, y + 20, width - 4, height - 22, true);
         
-        int textY = y + 25;
-        Raylib.DrawText("- Project1 (Project1.vbp)", x + 5, textY, 10, Color.Black);
-        Raylib.DrawText("- Forms", x + 15, textY + 15, 10, Color.Black);
-        Raylib.DrawText("Form1 (Form1.frm)", x + 30, textY + 30, 10, Color.Black);
-        Raylib.DrawText("- Modules", x + 15, textY + 45, 10, Color.Black);
-        Raylib.DrawText("Module1 (Module1.bas)", x + 30, textY + 60, 10, Color.Black);
+        // Internal toolbar area
+        Raylib.DrawRectangle(x + 2, y + 20, width - 4, 26, bgColor);
+        Draw3DBorder(x + 2, y + 20, width - 4, 26, false);
+        
+        int btnY = y + 22;
+        if (textures.TryGetValue("viewcode.gif", out var t1)) { Draw3DBorder(x + 5, btnY, 22, 22, false); Raylib.DrawTexture(t1, x + 8, btnY + 3, Color.White); }
+        if (textures.TryGetValue("viewobject.gif", out var t2)) { Draw3DBorder(x + 29, btnY, 22, 22, false); Raylib.DrawTexture(t2, x + 32, btnY + 3, Color.White); }
+        if (textures.TryGetValue("folder.gif", out var t3)) { Draw3DBorder(x + 53, btnY, 22, 22, true); Raylib.DrawTexture(t3, x + 56, btnY + 3, Color.White); }
+
+        // TreeView area
+        Raylib.DrawRectangle(x + 2, y + 46, width - 4, height - 48, Color.White);
+        Draw3DBorder(x + 2, y + 46, width - 4, height - 48, true);
+        
+        int textY = y + 50;
+        
+        if (textures.TryGetValue("project.gif", out var proj)) Raylib.DrawTexture(proj, x + 5, textY, Color.White);
+        DrawText("Project1 (Project1.vbp)", x + 25, textY + 2, Color.Black, true);
+        
+        if (textures.TryGetValue("project_folder.gif", out var pfolder)) Raylib.DrawTexture(pfolder, x + 20, textY + 20, Color.White);
+        DrawText("Forms", x + 40, textY + 22, Color.Black);
+
+        if (textures.TryGetValue("form.gif", out var pform)) Raylib.DrawTexture(pform, x + 35, textY + 40, Color.White);
+        DrawText("Form1 (Form1.frm)", x + 55, textY + 42, Color.Black);
     }
 
     private void DrawPropertiesWindow(int x, int y, int width, int height)
@@ -141,27 +236,43 @@ public class IDE
         DrawWindowFrame(x, y, width, height, "Properties - Form1", true);
         
         // ComboBox
-        Raylib.DrawRectangle(x + 2, y + 20, width - 4, 20, Color.White);
-        Draw3DBorder(x + 2, y + 20, width - 4, 20, true);
-        Raylib.DrawText("Form1 Form", x + 5, y + 25, 10, Color.Black);
+        Raylib.DrawRectangle(x + 2, y + 20, width - 4, 22, Color.White);
+        Draw3DBorder(x + 2, y + 20, width - 4, 22, true);
+        DrawText("Form1 Form", x + 5, y + 25, Color.Black, true);
+
+        // Tabs (Alphabetic / Categorized) - fake tabs
+        Raylib.DrawRectangle(x + 2, y + 44, width - 4, 22, bgColor);
+        Draw3DBorder(x + 2, y + 44, width - 4, 22, false);
+        Draw3DBorder(x + 4, y + 46, 70, 20, true);
+        DrawText("Alphabetic", x + 10, y + 50, Color.Black);
+        DrawText("Categorized", x + 85, y + 50, Color.Black);
 
         // Property Grid
-        Raylib.DrawRectangle(x + 2, y + 42, width - 4, height - 44, Color.White);
-        Draw3DBorder(x + 2, y + 42, width - 4, height - 44, true);
+        int gridY = y + 68;
+        int gridH = height - 70 - 40; // leave room at bottom for description box
+        Raylib.DrawRectangle(x + 2, gridY, width - 4, gridH, Color.White);
+        Draw3DBorder(x + 2, gridY, width - 4, gridH, true);
 
-        int propY = y + 44;
-        Raylib.DrawLine(x + width/2, propY, x + width/2, propY + height - 44, Color.LightGray);
+        int propY = gridY;
+        Raylib.DrawLine(x + width/2, propY, x + width/2, propY + gridH, Color.LightGray);
         
         string[] props = { "(Name)", "Appearance", "AutoRedraw", "BackColor", "BorderStyle", "Caption", "ClipControls", "ControlBox", "DrawMode", "DrawStyle", "DrawWidth", "Enabled", "FillColor", "FillStyle" };
         string[] vals =  { "Form1", "1 - 3D", "False", "&H8000000F&", "2 - Sizable", "Form1", "True", "True", "13 - Copy Pen", "0 - Solid", "1", "True", "&H00000000&", "1 - Transparent" };
 
         for (int i = 0; i < props.Length; i++)
         {
-            if (propY + 2 + i * 14 + 10 > y + height) break;
-            Raylib.DrawText(props[i], x + 5, propY + 2 + i * 14, 10, Color.Black);
-            Raylib.DrawText(vals[i], x + width/2 + 5, propY + 2 + i * 14, 10, Color.Black);
-            Raylib.DrawLine(x + 2, propY + 14 + i * 14, x + width - 3, propY + 14 + i * 14, Color.LightGray);
+            if (propY + 2 + i * 16 + 14 > gridY + gridH) break;
+            DrawText(props[i], x + 5, propY + 3 + i * 16, Color.Black);
+            DrawText(vals[i], x + width/2 + 5, propY + 3 + i * 16, Color.Black, i == 0 || i == 5); // bold some values
+            Raylib.DrawLine(x + 2, propY + 16 + i * 16, x + width - 3, propY + 16 + i * 16, Color.LightGray);
         }
+
+        // Description box
+        int descY = gridY + gridH + 2;
+        Raylib.DrawRectangle(x + 2, descY, width - 4, 36, bgColor);
+        Draw3DBorder(x + 2, descY, width - 4, 36, false);
+        DrawText("Caption", x + 5, descY + 4, Color.Black, true);
+        DrawText("Returns/sets the text displayed in an object's", x + 5, descY + 20, Color.Black);
     }
 
     private void DrawFormLayout(int x, int y, int width, int height)
@@ -203,15 +314,15 @@ public class IDE
             }
         }
         
-        // Let's draw some dummy controls on the form to make it look active
+        // Draw some dummy controls on the form
         // A Button
         Draw3DBorder(innerX + 50, innerY + 50, 100, 30, false);
-        Raylib.DrawText("Command1", innerX + 70, innerY + 60, 10, Color.Black);
+        DrawText("Command1", innerX + 70, innerY + 60, Color.Black);
         
         // A Textbox
         Raylib.DrawRectangle(innerX + 50, innerY + 100, 150, 20, Color.White);
         Draw3DBorder(innerX + 50, innerY + 100, 150, 20, true);
-        Raylib.DrawText("Text1", innerX + 55, innerY + 105, 10, Color.Black);
+        DrawText("Text1", innerX + 55, innerY + 104, Color.Black);
     }
 
     private void DrawWindowFrame(int x, int y, int width, int height, string title, bool isToolWindow)
@@ -221,7 +332,7 @@ public class IDE
 
         int titleHeight = isToolWindow ? 18 : 20;
         Raylib.DrawRectangle(x + 2, y + 2, width - 4, titleHeight, winBlue);
-        Raylib.DrawText(title, x + 4, y + 6, 10, Color.White);
+        DrawText(title, x + 4, y + 4, Color.White, true);
 
         // Close button
         int btnSize = titleHeight - 4;
@@ -229,8 +340,12 @@ public class IDE
         int btnY = y + 4;
         Raylib.DrawRectangle(btnX, btnY, btnSize, btnSize, bgColor);
         Draw3DBorder(btnX, btnY, btnSize, btnSize, false);
-        Raylib.DrawLine(btnX + 3, btnY + 3, btnX + btnSize - 4, btnY + btnSize - 4, Color.Black);
-        Raylib.DrawLine(btnX + 3, btnY + btnSize - 4, btnX + btnSize - 4, btnY + 3, Color.Black);
+        
+        // Draw the X inside the close button
+        Raylib.DrawLine(btnX + 3, btnY + 3, btnX + btnSize - 3, btnY + btnSize - 3, Color.Black);
+        Raylib.DrawLine(btnX + 4, btnY + 3, btnX + btnSize - 2, btnY + btnSize - 3, Color.Black);
+        Raylib.DrawLine(btnX + 3, btnY + btnSize - 3, btnX + btnSize - 3, btnY + 3, Color.Black);
+        Raylib.DrawLine(btnX + 4, btnY + btnSize - 3, btnX + btnSize - 2, btnY + 3, Color.Black);
     }
 
     private void Draw3DBorder(int x, int y, int width, int height, bool sunken)
