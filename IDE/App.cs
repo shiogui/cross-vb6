@@ -9,504 +9,452 @@ public unsafe class App : Application
 {
     private Window _window = null!;
     private bottlenoselabs.Interop.SDL.SDL_Renderer* _renderer;
-    private TextureManager _textureManager = null!;
-    private bool _layoutInitialized = false;
+    private TextureManager _tex = null!;
 
-    // toolbar icon handles
-    private nint _texAddProject, _texAddForm, _texMenuBar;
-    private nint _texOpen, _texSave;
-    private nint _texCut, _texCopy, _texPaste, _texFind;
-    private nint _texUndo, _texRedo;
-    private nint _texPlay, _texPause, _texStop;
-    private nint _texProjectExplorer, _texProperties, _texFormLayout;
-    private nint _texObjectBrowser, _texToolbox;
+    // toolbar/toolbox icons
+    private nint _addProject, _addForm, _menuBar, _open, _save;
+    private nint _cut, _copy, _paste, _find, _undo, _redo;
+    private nint _play, _pause, _stop;
+    private nint _projExplorer, _properties, _formLayout, _objBrowser, _toolbox, _dataView, _visualComp;
+    private nint _cursor, _picture, _label, _textbox, _groupbox, _button, _checkbox, _radio;
+    private nint _combo, _listbox, _hscroll, _vscroll, _timer, _drives, _directories;
+    private nint _files, _shape, _line, _image, _data, _ole;
+    private nint _viewCode, _viewObject, _folder, _project, _projFolder, _form;
 
     protected override void OnStart()
     {
-        // 1. Initialize ImGui context FIRST
         var ctx = ImGui.CreateContext();
         ImGui.SetCurrentContext(ctx);
+        var io = ImGui.GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
 
-        ImGuiIOPtr io = ImGui.GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard
-                        | ImGuiConfigFlags.DockingEnable;
-
-        // Load MS Sans Serif font
         var fontPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Resources", "MS-Sans-Serif.ttf");
         if (System.IO.File.Exists(fontPath))
-            io.Fonts.AddFontFromFileTTF(fontPath, 13.0f);
+            io.Fonts.AddFontFromFileTTF(fontPath, 13f);
 
-        SetClassicTheme();
+        ApplyClassicTheme();
 
-        // 2. Create window
-        _window = CreateWindow(new WindowOptions
-        {
-            Title = "CrossVB6 IDE",
-            Width = 1280,
-            Height = 800
-        });
+        _window = CreateWindow(new WindowOptions { Title = "Visual Basic", Width = 1280, Height = 800 });
+        _renderer = SDL.SDL_CreateRenderer((bottlenoselabs.Interop.SDL.SDL_Window*)(void*)_window.Handle, null);
+        _tex = new TextureManager(_renderer);
 
-        // 3. Create renderer
-        _renderer = SDL.SDL_CreateRenderer(
-            (bottlenoselabs.Interop.SDL.SDL_Window*)(void*)_window.Handle, null);
-
-        _textureManager = new TextureManager(_renderer);
-
-        // 4. Sync ImGui context with backend
         ImGuiImplSDL3.SetCurrentContext(ImGui.GetCurrentContext());
+        var wp = new SDLWindowPtr((Hexa.NET.ImGui.Backends.SDL3.SDLWindow*)(void*)_window.Handle);
+        var rp = new SDLRendererPtr((Hexa.NET.ImGui.Backends.SDL3.SDLRenderer*)(void*)_renderer);
+        ImGuiImplSDL3.InitForSDLRenderer(wp, rp);
+        ImGuiImplSDL3.SDLRenderer3Init(rp);
 
-        var winPtr = new SDLWindowPtr((Hexa.NET.ImGui.Backends.SDL3.SDLWindow*)(void*)_window.Handle);
-        var renPtr = new SDLRendererPtr((Hexa.NET.ImGui.Backends.SDL3.SDLRenderer*)(void*)_renderer);
-        ImGuiImplSDL3.InitForSDLRenderer(winPtr, renPtr);
-        ImGuiImplSDL3.SDLRenderer3Init(renPtr);
-
-        // 5. Pre-load toolbar icons (paths relative to exe output dir)
-        string ico(string name) => System.IO.Path.Combine(AppContext.BaseDirectory, "Icons", name);
-        _texAddProject      = _textureManager.GetTexture(ico("addproject.gif"));
-        _texAddForm         = _textureManager.GetTexture(ico("addform.gif"));
-        _texMenuBar         = _textureManager.GetTexture(ico("menubar.gif"));
-        _texOpen            = _textureManager.GetTexture(ico("open.gif"));
-        _texSave            = _textureManager.GetTexture(ico("save.gif"));
-        _texCut             = _textureManager.GetTexture(ico("cut.gif"));
-        _texCopy            = _textureManager.GetTexture(ico("copy.gif"));
-        _texPaste           = _textureManager.GetTexture(ico("paste.gif"));
-        _texFind            = _textureManager.GetTexture(ico("find.gif"));
-        _texUndo            = _textureManager.GetTexture(ico("undo.gif"));
-        _texRedo            = _textureManager.GetTexture(ico("redo.gif"));
-        _texPlay            = _textureManager.GetTexture(ico("play.gif"));
-        _texPause           = _textureManager.GetTexture(ico("pause.gif"));
-        _texStop            = _textureManager.GetTexture(ico("stop.gif"));
-        _texProjectExplorer = _textureManager.GetTexture(ico("projectexplorer.gif"));
-        _texProperties      = _textureManager.GetTexture(ico("properties.gif"));
-        _texFormLayout      = _textureManager.GetTexture(ico("formlayout.gif"));
-        _texObjectBrowser   = _textureManager.GetTexture(ico("objectbrowser.gif"));
-        _texToolbox         = _textureManager.GetTexture(ico("toolbox.gif"));
+        string i(string n) => System.IO.Path.Combine(AppContext.BaseDirectory, "Icons", n);
+        _addProject = _tex.GetTexture(i("addproject.png"));
+        _addForm    = _tex.GetTexture(i("addform.png"));
+        _menuBar    = _tex.GetTexture(i("menubar.png"));
+        _open       = _tex.GetTexture(i("open.png"));
+        _save       = _tex.GetTexture(i("save.png"));
+        _cut        = _tex.GetTexture(i("cut.png"));
+        _copy       = _tex.GetTexture(i("copy.png"));
+        _paste      = _tex.GetTexture(i("paste.png"));
+        _find       = _tex.GetTexture(i("find.png"));
+        _undo       = _tex.GetTexture(i("undo.png"));
+        _redo       = _tex.GetTexture(i("redo.png"));
+        _play       = _tex.GetTexture(i("play.png"));
+        _pause      = _tex.GetTexture(i("pause.png"));
+        _stop       = _tex.GetTexture(i("stop.png"));
+        _projExplorer = _tex.GetTexture(i("projectexplorer.png"));
+        _properties   = _tex.GetTexture(i("properties.png"));
+        _formLayout   = _tex.GetTexture(i("formlayout.png"));
+        _objBrowser   = _tex.GetTexture(i("objectbrowser.png"));
+        _toolbox      = _tex.GetTexture(i("toolbox.png"));
+        _dataView     = _tex.GetTexture(i("dataview.png"));
+        _visualComp   = _tex.GetTexture(i("visualcomponent.png"));
+        _cursor       = _tex.GetTexture(i("cursor.png"));
+        _picture      = _tex.GetTexture(i("picture.png"));
+        _label        = _tex.GetTexture(i("label.png"));
+        _textbox      = _tex.GetTexture(i("textbox.png"));
+        _groupbox     = _tex.GetTexture(i("groupbox.png"));
+        _button       = _tex.GetTexture(i("button.png"));
+        _checkbox     = _tex.GetTexture(i("checkbox.png"));
+        _radio        = _tex.GetTexture(i("radio.png"));
+        _combo        = _tex.GetTexture(i("combo.png"));
+        _listbox      = _tex.GetTexture(i("listbox.png"));
+        _hscroll      = _tex.GetTexture(i("hscroll.png"));
+        _vscroll      = _tex.GetTexture(i("vscroll.png"));
+        _timer        = _tex.GetTexture(i("timer.png"));
+        _drives       = _tex.GetTexture(i("drives.png"));
+        _directories  = _tex.GetTexture(i("directories.png"));
+        _files        = _tex.GetTexture(i("files.png"));
+        _shape        = _tex.GetTexture(i("shape.png"));
+        _line         = _tex.GetTexture(i("line.png"));
+        _image        = _tex.GetTexture(i("image.png"));
+        _data         = _tex.GetTexture(i("data.png"));
+        _ole          = _tex.GetTexture(i("ole.png"));
+        _viewCode     = _tex.GetTexture(i("viewcode.png"));
+        _viewObject   = _tex.GetTexture(i("viewobject.png"));
+        _folder       = _tex.GetTexture(i("folder.png"));
+        _project      = _tex.GetTexture(i("project.png"));
+        _projFolder   = _tex.GetTexture(i("project_folder.png"));
+        _form         = _tex.GetTexture(i("form.png"));
     }
 
     protected override void OnExit()
     {
-        _textureManager.Dispose();
+        _tex.Dispose();
         ImGuiImplSDL3.SDLRenderer3Shutdown();
         ImGuiImplSDL3.Shutdown();
         ImGui.DestroyContext();
         SDL.SDL_DestroyRenderer(_renderer);
     }
 
-    protected override void OnUpdate(TimeSpan deltaTime) { }
+    protected override void OnUpdate(TimeSpan dt) { }
 
-    protected override void OnDraw(TimeSpan deltaTime)
+    protected override void OnDraw(TimeSpan dt)
     {
-        var renPtr = new SDLRendererPtr((Hexa.NET.ImGui.Backends.SDL3.SDLRenderer*)(void*)_renderer);
-
+        var rp = new SDLRendererPtr((Hexa.NET.ImGui.Backends.SDL3.SDLRenderer*)(void*)_renderer);
         ImGuiImplSDL3.SDLRenderer3NewFrame();
         ImGuiImplSDL3.NewFrame();
         ImGui.NewFrame();
 
-        SetupDockspace();
-        DrawMenuBar();
-        DrawToolbar();
-        DrawToolWindows();
+        var vp   = ImGui.GetMainViewport();
+        float sw = vp.Size.X;
+        float sh = vp.Size.Y;
+
+        const float MenuH    = 20f;
+        const float ToolbarH = 30f;
+        const float ToolboxW = 92f;
+        const float RightW   = 220f;
+        float topOffset = MenuH + ToolbarH;
+        float workH     = sh - topOffset;
+
+        DrawMenuBar(sw);
+        DrawToolbar(MenuH, sw, ToolbarH);
+        DrawToolbox(topOffset, ToolboxW, workH);
+        DrawRightPanels(sw, topOffset, RightW, workH);
+        DrawMdiArea(ToolboxW, topOffset, sw - ToolboxW - RightW, workH);
 
         ImGui.Render();
-
         SDL.SDL_SetRenderDrawColor(_renderer, 212, 208, 200, 255);
         SDL.SDL_RenderClear(_renderer);
-        ImGuiImplSDL3.SDLRenderer3RenderDrawData(ImGui.GetDrawData(), renPtr);
+        ImGuiImplSDL3.SDLRenderer3RenderDrawData(ImGui.GetDrawData(), rp);
         SDL.SDL_RenderPresent(_renderer);
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    //  Dockspace + initial layout
-    // ──────────────────────────────────────────────────────────────────────
-    private void SetupDockspace()
+    // ── Helpers ──────────────────────────────────────────────────────────
+
+    static ImGuiWindowFlags PanelFlags =>
+        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize |
+        ImGuiWindowFlags.NoMove     | ImGuiWindowFlags.NoScrollbar |
+        ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoSavedSettings;
+
+    // Draw a 16x16 icon inline (no button frame).
+    static void Icon(string id, nint t)
     {
-        var viewport = ImGui.GetMainViewport();
-        float menuH    = ImGui.GetFrameHeight();
-        float toolbarH = 30f;
-        float topOffset = menuH + toolbarH;
-
-        ImGui.SetNextWindowPos(new Vector2(viewport->Pos.X, viewport->Pos.Y + topOffset));
-        ImGui.SetNextWindowSize(new Vector2(viewport->Size.X, viewport->Size.Y - topOffset));
-        ImGui.SetNextWindowViewport(viewport->ID);
-
-        var hostFlags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse
-                      | ImGuiWindowFlags.NoResize   | ImGuiWindowFlags.NoMove
-                      | ImGuiWindowFlags.NoBringToFrontOnFocus
-                      | ImGuiWindowFlags.NoNavFocus  | ImGuiWindowFlags.NoBackground;
-
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 0));
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0f);
-        ImGui.Begin("DockHost", hostFlags);
-        ImGui.PopStyleVar(2);
-
-        uint dockId = ImGui.GetID("MainDockspace");
-        ImGui.DockSpace(dockId, new Vector2(0, 0), ImGuiDockNodeFlags.PassthruCentralNode);
-
-        if (!_layoutInitialized)
-        {
-            _layoutInitialized = true;
-            BuildInitialLayout(dockId, viewport->Size, topOffset);
-        }
-
-        ImGui.End();
-    }
-
-    private static void BuildInitialLayout(uint dockId, Vector2 size, float topOffset)
-    {
-        ImGui.DockBuilderRemoveNode(dockId);
-        ImGui.DockBuilderAddNode(dockId, ImGuiDockNodeFlags.DockSpace);
-        ImGui.DockBuilderSetNodeSize(dockId, new Vector2(size.X, size.Y - topOffset));
-
-        // Split: left toolbox | centre | right panels
-        uint nodeLeft, nodeCenter;
-        ImGui.DockBuilderSplitNode(dockId, ImGuiDir.Left, 0.14f, out nodeLeft, out nodeCenter);
-
-        uint nodeRight, nodeWork;
-        ImGui.DockBuilderSplitNode(nodeCenter, ImGuiDir.Right, 0.22f, out nodeRight, out nodeWork);
-
-        // Right column: project explorer | properties | form layout
-        uint nodeRightTop, nodeRightMid, nodeRightBot;
-        ImGui.DockBuilderSplitNode(nodeRight, ImGuiDir.Up, 0.35f, out nodeRightTop, out nodeRightMid);
-        ImGui.DockBuilderSplitNode(nodeRightMid, ImGuiDir.Down, 0.45f, out nodeRightMid, out nodeRightBot);
-
-        ImGui.DockBuilderDockWindow("Toolbox",              nodeLeft);
-        ImGui.DockBuilderDockWindow("Project - Project1",   nodeRightTop);
-        ImGui.DockBuilderDockWindow("Properties - Form1",   nodeRightMid);
-        ImGui.DockBuilderDockWindow("Form Layout",          nodeRightBot);
-
-        ImGui.DockBuilderFinish(dockId);
-    }
-
-    // ──────────────────────────────────────────────────────────────────────
-    //  Menu bar
-    // ──────────────────────────────────────────────────────────────────────
-    private static void DrawMenuBar()
-    {
-        if (!ImGui.BeginMainMenuBar()) return;
-
-        if (ImGui.BeginMenu("File"))
-        {
-            ImGui.MenuItem("New Project");
-            ImGui.MenuItem("Open Project...");
-            ImGui.Separator();
-            ImGui.MenuItem("Save Project");
-            ImGui.MenuItem("Save Project As...");
-            ImGui.Separator();
-            ImGui.MenuItem("Print...");
-            ImGui.Separator();
-            ImGui.MenuItem("Make Project...");
-            ImGui.Separator();
-            ImGui.MenuItem("Exit");
-            ImGui.EndMenu();
-        }
-        if (ImGui.BeginMenu("Edit"))
-        {
-            ImGui.MenuItem("Undo");  ImGui.MenuItem("Redo"); ImGui.Separator();
-            ImGui.MenuItem("Cut");   ImGui.MenuItem("Copy"); ImGui.MenuItem("Paste");
-            ImGui.Separator();
-            ImGui.MenuItem("Find..."); ImGui.MenuItem("Replace...");
-            ImGui.EndMenu();
-        }
-        if (ImGui.BeginMenu("View"))
-        {
-            ImGui.MenuItem("Code");   ImGui.MenuItem("Object"); ImGui.Separator();
-            ImGui.MenuItem("Immediate Window"); ImGui.MenuItem("Locals Window");
-            ImGui.MenuItem("Watch Window"); ImGui.Separator();
-            ImGui.MenuItem("Project Explorer"); ImGui.MenuItem("Properties Window");
-            ImGui.MenuItem("Form Layout Window"); ImGui.Separator();
-            ImGui.MenuItem("Toolbox");
-            ImGui.EndMenu();
-        }
-        if (ImGui.BeginMenu("Project"))
-        {
-            ImGui.MenuItem("Add Form"); ImGui.MenuItem("Add Module");
-            ImGui.MenuItem("Add Class Module"); ImGui.Separator();
-            ImGui.MenuItem("References..."); ImGui.MenuItem("Components...");
-            ImGui.Separator(); ImGui.MenuItem("Properties...");
-            ImGui.EndMenu();
-        }
-        if (ImGui.BeginMenu("Format"))   { ImGui.MenuItem("Align"); ImGui.EndMenu(); }
-        if (ImGui.BeginMenu("Debug"))
-        {
-            ImGui.MenuItem("Step Into"); ImGui.MenuItem("Step Over"); ImGui.MenuItem("Step Out");
-            ImGui.Separator();
-            ImGui.MenuItem("Toggle Breakpoint"); ImGui.MenuItem("Clear All Breakpoints");
-            ImGui.EndMenu();
-        }
-        if (ImGui.BeginMenu("Run"))
-        {
-            ImGui.MenuItem("Start"); ImGui.MenuItem("Break"); ImGui.MenuItem("End");
-            ImGui.MenuItem("Restart");
-            ImGui.EndMenu();
-        }
-        if (ImGui.BeginMenu("Tools"))
-        {
-            ImGui.MenuItem("Menu Editor..."); ImGui.Separator(); ImGui.MenuItem("Options...");
-            ImGui.EndMenu();
-        }
-        if (ImGui.BeginMenu("Add-Ins"))
-        {
-            ImGui.MenuItem("Add-In Manager...");
-            ImGui.EndMenu();
-        }
-        if (ImGui.BeginMenu("Window"))
-        {
-            ImGui.MenuItem("Tile Horizontally"); ImGui.MenuItem("Tile Vertically");
-            ImGui.MenuItem("Cascade");
-            ImGui.EndMenu();
-        }
-        if (ImGui.BeginMenu("Help"))
-        {
-            ImGui.MenuItem("Contents..."); ImGui.MenuItem("Index...");
-            ImGui.Separator(); ImGui.MenuItem("About Visual Basic...");
-            ImGui.EndMenu();
-        }
-
-        ImGui.EndMainMenuBar();
-    }
-
-    // ──────────────────────────────────────────────────────────────────────
-    //  Standard toolbar — pinned just under the menu bar
-    // ──────────────────────────────────────────────────────────────────────
-    private void DrawToolbar()
-    {
-        var viewport = ImGui.GetMainViewport();
-        float menuH = ImGui.GetFrameHeight();
-
-        ImGui.SetNextWindowPos(new Vector2(viewport->Pos.X, viewport->Pos.Y + menuH));
-        ImGui.SetNextWindowSize(new Vector2(viewport->Size.X, 30f));
-
-        var flags = ImGuiWindowFlags.NoTitleBar    | ImGuiWindowFlags.NoResize
-                  | ImGuiWindowFlags.NoMove        | ImGuiWindowFlags.NoScrollbar
-                  | ImGuiWindowFlags.NoScrollWithMouse
-                  | ImGuiWindowFlags.NoBringToFrontOnFocus
-                  | ImGuiWindowFlags.NoSavedSettings;
-
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4, 4));
-        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing,   new Vector2(2, 2));
-        ImGui.Begin("##toolbar", flags);
-        ImGui.PopStyleVar(2);
-
-        // Group 1: Project/Form
-        Btn("##addProject", _texAddProject); ImGui.SameLine();
-        Btn("##addForm",    _texAddForm);    ImGui.SameLine();
-        Btn("##menuBar",    _texMenuBar);    ImGui.SameLine();
-        TSep(); ImGui.SameLine();
-
-        // Group 2: File
-        Btn("##open",  _texOpen);  ImGui.SameLine();
-        Btn("##save",  _texSave);  ImGui.SameLine();
-        TSep(); ImGui.SameLine();
-
-        // Group 3: Edit
-        Btn("##cut",   _texCut);   ImGui.SameLine();
-        Btn("##copy",  _texCopy);  ImGui.SameLine();
-        Btn("##paste", _texPaste); ImGui.SameLine();
-        Btn("##find",  _texFind);  ImGui.SameLine();
-        TSep(); ImGui.SameLine();
-
-        // Group 4: Undo/Redo
-        Btn("##undo",  _texUndo);  ImGui.SameLine();
-        Btn("##redo",  _texRedo);  ImGui.SameLine();
-        TSep(); ImGui.SameLine();
-
-        // Group 5: Run
-        Btn("##play",  _texPlay);  ImGui.SameLine();
-        Btn("##pause", _texPause); ImGui.SameLine();
-        Btn("##stop",  _texStop);  ImGui.SameLine();
-        TSep(); ImGui.SameLine();
-
-        // Group 6: View tools
-        Btn("##projExp", _texProjectExplorer); ImGui.SameLine();
-        Btn("##props",   _texProperties);      ImGui.SameLine();
-        Btn("##formLay", _texFormLayout);      ImGui.SameLine();
-        Btn("##objBrow", _texObjectBrowser);   ImGui.SameLine();
-        Btn("##toolbox", _texToolbox);
-
-        ImGui.End();
-    }
-
-    /// Renders a small 16×16 toolbar icon button.
-    private static void Btn(string id, nint tex)
-    {
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(2, 2));
-        if (tex != 0)
-        {
-            var texRef = new ImTextureRef((ImTextureData*)(void*)tex);
-            ImGui.ImageButton(id, texRef, new Vector2(16, 16));
-        }
+        if (t != 0)
+            ImGui.Image(new ImTextureRef((ImTextureData*)(void*)t), new Vector2(16, 16));
         else
+            ImGui.Dummy(new Vector2(16, 16));
+    }
+
+    // 22x22 toolbar icon button (1px frame padding each side = 16px icon + 3*2px padding).
+    static void IconBtn(string id, nint t, Vector2 size = default)
+    {
+        if (size == default) size = new Vector2(22, 22);
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(3, 3));
+        if (t != 0)
+            ImGui.ImageButton(id, new ImTextureRef((ImTextureData*)(void*)t), new Vector2(16, 16));
+        else
+            ImGui.InvisibleButton(id, size); // keep spacing but show nothing
+        ImGui.PopStyleVar();
+    }
+
+    // ── Menu bar ─────────────────────────────────────────────────────────
+
+    static void DrawMenuBar(float sw)
+    {
+        // ImGui.SetNextWindowPos(Vector2.Zero);
+        // ImGui.SetNextWindowSize(new Vector2(sw, 20));
+        // ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4, 2));
+        // ImGui.Begin("##menubar", PanelFlags | ImGuiWindowFlags.MenuBar);
+        // ImGui.PopStyleVar();
+  
+        if (ImGui.BeginMainMenuBar())
         {
-            // invisible placeholder so spacing stays consistent
-            ImGui.InvisibleButton(id, new Vector2(20, 20));
+            foreach (var m in new[]{"File","Edit","View","Project","Format","Debug","Run","Query","Diagram","Tools","Add-Ins","Window","Help"})
+            {
+                if (ImGui.BeginMenu(m))
+                {
+                    ImGui.EndMenu();
+                }
+            }
+
+            ImGui.EndMainMenuBar();
         }
-        ImGui.PopStyleVar();
     }
 
-    /// Vertical separator line inside toolbar.
-    private static void TSep()
+    // ── Toolbar ──────────────────────────────────────────────────────────
+
+    void DrawToolbar(float y, float sw, float h)
     {
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0, 0));
-        ImGui.SeparatorEx(ImGuiSeparatorFlags.Vertical);
-        ImGui.PopStyleVar();
+        ImGui.SetNextWindowPos(new Vector2(0, y));
+        ImGui.SetNextWindowSize(new Vector2(sw, h));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(3, 3));
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(1, 1));
+        ImGui.Begin("##toolbar", PanelFlags);
+        ImGui.PopStyleVar(2);
+
+        int sepN = 0;
+        // Groups separated by vertical lines
+        void TBtn(string id, nint t) { IconBtn(id, t); ImGui.SameLine(); }
+        void TSep() {
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0, 4));
+            ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.5f,0.5f,0.5f,1));
+            ImGui.Button($"##sep{sepN++}", new Vector2(2, 22));
+            ImGui.PopStyleColor(); ImGui.PopStyleVar();
+            ImGui.SameLine();
+        }
+
+        TBtn("##ap",_addProject); TBtn("##af",_addForm); TBtn("##mb",_menuBar); TSep();
+        TBtn("##op",_open);       TBtn("##sv",_save);    TSep();
+        TBtn("##ct",_cut); TBtn("##cp",_copy); TBtn("##ps",_paste); TBtn("##fn",_find); TSep();
+        TBtn("##un",_undo);       TBtn("##rd",_redo);    TSep();
+        TBtn("##pl",_play); TBtn("##pa",_pause); TBtn("##st",_stop); TSep();
+        TBtn("##pe",_projExplorer); TBtn("##pr",_properties); TBtn("##fl",_formLayout);
+        TBtn("##ob",_objBrowser);   TBtn("##tb",_toolbox);     TBtn("##dv",_dataView); IconBtn("##vc",_visualComp);
+
+        ImGui.End();
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    //  Tool windows
-    // ──────────────────────────────────────────────────────────────────────
-    private static void DrawToolWindows()
+    // ── Toolbox ──────────────────────────────────────────────────────────
+
+    void DrawToolbox(float y, float w, float h)
     {
-        // Toolbox
-        ImGui.Begin("Toolbox");
-        ImGui.TextDisabled("(General)");
-        ImGui.Separator();
-        string[] tools = { "Pointer", "PictureBox", "Label", "TextBox", "Frame",
-                           "CommandButton", "CheckBox", "OptionButton", "ComboBox",
-                           "ListBox", "HScrollBar", "VScrollBar", "Timer",
-                           "DriveListBox", "DirListBox", "FileListBox", "Shape",
-                           "Line", "Image", "Data", "OLE" };
-        foreach (var t in tools)
+        ImGui.SetNextWindowPos(new Vector2(0, y));
+        ImGui.SetNextWindowSize(new Vector2(w, h));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(5, 4));
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(2, 2));
+        ImGui.Begin("##toolbox", PanelFlags);
+        ImGui.PopStyleVar(2);
+
+        // "General" header label — dark background like win95 group header
+        var dl = ImGui.GetWindowDrawList();
+        var p  = ImGui.GetCursorScreenPos();
+        dl.AddRectFilled(p, new Vector2(p.X + w, p.Y + 18), 0xFFD4D0C8);
+        dl.AddRect(p, new Vector2(p.X + w - 1, p.Y + 17), 0xFF808080);
+        ImGui.TextUnformatted("General");
+
+        nint[] icons = {
+            _cursor,_picture,_label,_textbox,_groupbox,
+            _button,_checkbox,_radio,_combo,_listbox,
+            _hscroll,_vscroll,_timer,_drives,_directories,
+            _files,_shape,_line,_image,_data,_ole
+        };
+
+        // 2-column icon grid, 24x24 cells
+        for (int idx = 0; idx < icons.Length; idx++)
         {
-            ImGui.Selectable(t);
+            if (idx % 2 != 0) ImGui.SameLine();
+            bool selected = idx == 0;
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(3, 3));
+            ImGui.PushStyleColor(ImGuiCol.Button,
+                selected ? new Vector4(0.78f,0.78f,0.78f,1) : new Vector4(0.831f,0.815f,0.784f,1));
+            if (icons[idx] != 0)
+                ImGui.ImageButton($"##tb{idx}", new ImTextureRef((ImTextureData*)(void*)icons[idx]), new Vector2(16,16));
+            else
+                ImGui.InvisibleButton($"##tb{idx}", new Vector2(22,22));
+            ImGui.PopStyleColor();
+            ImGui.PopStyleVar();
         }
         ImGui.End();
+    }
+
+    // ── Right panels ─────────────────────────────────────────────────────
+
+    void DrawRightPanels(float sw, float topY, float w, float workH)
+    {
+        float x = sw - w;
+        float projH = workH / 3f;
+        float propH = workH / 2f;
+        float layH  = workH - projH - propH;
 
         // Project Explorer
-        ImGui.Begin("Project - Project1");
-        ImGui.SetNextItemOpen(true, ImGuiCond.Once);
-        if (ImGui.TreeNode("Project1 (Project1.vbp)"))
-        {
-            ImGui.SetNextItemOpen(true, ImGuiCond.Once);
-            if (ImGui.TreeNode("Forms"))
-            {
-                ImGui.Selectable("Form1 (Form1.frm)");
-                ImGui.TreePop();
-            }
-            ImGui.TreePop();
-        }
+        ImGui.SetNextWindowPos(new Vector2(x, topY));
+        ImGui.SetNextWindowSize(new Vector2(w, projH));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4, 4));
+        ImGui.Begin("Project - Project1", PanelFlags & ~ImGuiWindowFlags.NoTitleBar);
+        ImGui.PopStyleVar();
+        IconBtn("##vc2",_viewCode); ImGui.SameLine();
+        IconBtn("##vo2",_viewObject); ImGui.SameLine();
+        IconBtn("##fld",_folder);
+        ImGui.Separator();
+        ImGui.PushStyleColor(ImGuiCol.ChildBg, new Vector4(1,1,1,1));
+        ImGui.BeginChild("##ptree", new Vector2(-1, -1), ImGuiChildFlags.Borders);
+        ImGui.PopStyleColor();
+        Icon("##pi",_project); ImGui.SameLine(); ImGui.TextUnformatted("Project1 (Project1.vbp)");
+        ImGui.Indent();
+        Icon("##pf",_projFolder); ImGui.SameLine(); ImGui.TextUnformatted("Forms");
+        ImGui.Indent();
+        Icon("##frm",_form); ImGui.SameLine(); ImGui.TextUnformatted("Form1 (Form1.frm)");
+        ImGui.Unindent(); ImGui.Unindent();
+        ImGui.EndChild();
         ImGui.End();
 
         // Properties
-        ImGui.Begin("Properties - Form1");
-        ImGui.TextDisabled("Form1  Form");
-        ImGui.Separator();
-        if (ImGui.BeginTable("##props", 2, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.RowBg))
+        ImGui.SetNextWindowPos(new Vector2(x, topY + projH));
+        ImGui.SetNextWindowSize(new Vector2(w, propH));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4, 4));
+        ImGui.Begin("Properties - Form1", PanelFlags & ~ImGuiWindowFlags.NoTitleBar);
+        ImGui.PopStyleVar();
+        ImGui.SetNextItemWidth(-1);
+        ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(1,1,1,1));
+        string combo = "Form1  Form"; ImGui.InputText("##obj", ref combo, 64, ImGuiInputTextFlags.ReadOnly);
+        ImGui.PopStyleColor();
+        if (ImGui.BeginTabBar("##proptabs"))
         {
-            (string, string)[] props = {
-                ("(Name)",       "Form1"),
-                ("BackColor",    "&H8000000F&"),
-                ("BorderStyle",  "2 - Sizable"),
-                ("Caption",      "Form1"),
-                ("Height",       "3600"),
-                ("Left",         "0"),
-                ("StartUpPos",   "3 - Windows Default"),
-                ("Top",          "0"),
-                ("Width",        "4800"),
+            if (ImGui.BeginTabItem("Alphabetic")) ImGui.EndTabItem();
+            if (ImGui.BeginTabItem("Categorized")) ImGui.EndTabItem();
+            ImGui.EndTabBar();
+        }
+        ImGui.PushStyleColor(ImGuiCol.ChildBg, new Vector4(1,1,1,1));
+        ImGui.BeginChild("##propgrid", new Vector2(-1, -40), ImGuiChildFlags.Borders);
+        ImGui.PopStyleColor();
+        if (ImGui.BeginTable("##pt", 2, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY))
+        {
+            ImGui.TableSetupColumn("Property", ImGuiTableColumnFlags.WidthFixed, w/2f - 8f);
+            ImGui.TableSetupColumn("Value");
+            string[][] rows = {
+                new[]{"(Name)","Form1"}, new[]{"Appearance","1 - 3D"},
+                new[]{"AutoRedraw","False"}, new[]{"BackColor","&H8000000F&"},
+                new[]{"BorderStyle","2 - Sizable"}, new[]{"Caption","Form1"},
+                new[]{"ClipControls","True"}, new[]{"ControlBox","True"},
+                new[]{"DrawMode","13 - Copy Pen"}, new[]{"DrawStyle","0 - Solid"},
+                new[]{"DrawWidth","1"}, new[]{"Enabled","True"},
+                new[]{"FillColor","&H00000000&"}, new[]{"FillStyle","1 - Transparent"},
             };
-            foreach (var (k, v) in props)
+            foreach (var row in rows)
             {
-                ImGui.TableNextRow();
-                ImGui.TableSetColumnIndex(0); ImGui.TextUnformatted(k);
-                ImGui.TableSetColumnIndex(1); ImGui.TextUnformatted(v);
+                ImGui.TableNextRow(); ImGui.TableSetColumnIndex(0); ImGui.TextUnformatted(row[0]);
+                ImGui.TableSetColumnIndex(1); ImGui.TextUnformatted(row[1]);
             }
             ImGui.EndTable();
         }
+        ImGui.EndChild();
+        ImGui.Separator();
+        ImGui.TextUnformatted("Caption"); ImGui.TextDisabled("Returns/sets the text displayed");
         ImGui.End();
 
         // Form Layout
-        ImGui.Begin("Form Layout");
-        ImGui.TextDisabled("Form1");
+        ImGui.SetNextWindowPos(new Vector2(x, topY + projH + propH));
+        ImGui.SetNextWindowSize(new Vector2(w, layH));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4, 4));
+        ImGui.Begin("Form Layout", PanelFlags & ~ImGuiWindowFlags.NoTitleBar);
+        ImGui.PopStyleVar();
+        ImGui.PushStyleColor(ImGuiCol.ChildBg, new Vector4(1,1,1,1));
+        ImGui.BeginChild("##flchild", new Vector2(-1,-1), ImGuiChildFlags.Borders);
+        ImGui.PopStyleColor();
+        var dl   = ImGui.GetWindowDrawList();
+        var pos  = ImGui.GetCursorScreenPos();
         var avail = ImGui.GetContentRegionAvail();
-        var canvas = new Vector2(avail.X - 4, avail.Y - 4);
-        if (canvas.X > 10 && canvas.Y > 10)
-        {
-            var p = ImGui.GetCursorScreenPos();
-            var dl = ImGui.GetWindowDrawList();
-            // Desktop background
-            dl->AddRectFilled(p, new Vector2(p.X + canvas.X, p.Y + canvas.Y),
-                0xFF808080);
-            // Form representation (small rectangle)
-            float fx = p.X + canvas.X * 0.15f;
-            float fy = p.Y + canvas.Y * 0.15f;
-            float fw = canvas.X * 0.55f;
-            float fh = canvas.Y * 0.55f;
-            dl->AddRectFilled(new Vector2(fx, fy), new Vector2(fx + fw, fy + fh), 0xFFD4D0C8);
-            dl->AddRect(new Vector2(fx, fy), new Vector2(fx + fw, fy + fh), 0xFF000080);
-            // Title bar
-            dl->AddRectFilled(new Vector2(fx, fy), new Vector2(fx + fw, fy + 12), 0xFF800000);
-            ImGui.Dummy(canvas);
-        }
+        float mx = pos.X + avail.X/2f - 30f, my = pos.Y + avail.Y/2f - 25f;
+        dl.AddRectFilled(new Vector2(mx,my), new Vector2(mx+60,my+45), 0xFFD4D0C8);
+        dl.AddRect(new Vector2(mx,my), new Vector2(mx+60,my+45), 0xFF808080);
+        dl.AddRectFilled(new Vector2(mx+4,my+4), new Vector2(mx+56,my+41), 0xFF000000);
+        dl.AddRectFilled(new Vector2(mx+10,my+10), new Vector2(mx+30,my+25), 0xFFD4D0C8);
+        dl.AddRectFilled(new Vector2(mx+10,my+10), new Vector2(mx+30,my+14), 0xFF800000);
+        ImGui.Dummy(avail);
+        ImGui.EndChild();
         ImGui.End();
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    //  Classic Win95 theme
-    // ──────────────────────────────────────────────────────────────────────
-    private static void SetClassicTheme()
+    // ── MDI area ─────────────────────────────────────────────────────────
+
+    static void DrawMdiArea(float x, float y, float w, float h)
     {
-        var style = ImGui.GetStyle();
-        var c     = style.Colors;
+        ImGui.SetNextWindowPos(new Vector2(x, y));
+        ImGui.SetNextWindowSize(new Vector2(w, h));
+        ImGui.PushStyleColor(ImGuiCol.WindowBg, new Vector4(0.5f,0.5f,0.5f,1f));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+        ImGui.Begin("##mdi", PanelFlags);
+        ImGui.PopStyleVar(); ImGui.PopStyleColor();
 
-        // Base colors
-        var bg      = new Vector4(0.831f, 0.815f, 0.784f, 1f); // #D4D0C8
-        var dark    = new Vector4(0.502f, 0.502f, 0.502f, 1f); // #808080
-        var darker  = new Vector4(0.251f, 0.251f, 0.251f, 1f); // #404040
-        var light   = new Vector4(1f,     1f,     1f,     1f);
-        var titleBg = new Vector4(0.000f, 0.000f, 0.502f, 1f); // #000080
-        var sel     = new Vector4(0.000f, 0.000f, 0.502f, 1f);
-        var text    = new Vector4(0f, 0f, 0f, 1f);
-        var white   = new Vector4(1f, 1f, 1f, 1f);
+        // Form window inside MDI
+        ImGui.SetNextWindowPos(new Vector2(x + 20, y + 20), ImGuiCond.Once);
+        ImGui.SetNextWindowSize(new Vector2(500, 380), ImGuiCond.Once);
+        ImGui.PushStyleColor(ImGuiCol.TitleBg,       new Vector4(0,0,0.5f,1));
+        ImGui.PushStyleColor(ImGuiCol.TitleBgActive, new Vector4(0,0,0.5f,1));
+        ImGui.PushStyleColor(ImGuiCol.WindowBg,      new Vector4(0.831f,0.815f,0.784f,1));
+        ImGui.Begin("Project1 - Form1 (Form)", ImGuiWindowFlags.NoSavedSettings);
+        ImGui.PopStyleColor(3);
 
-        c[(int)ImGuiCol.Text]                 = text;
+        var dl  = ImGui.GetWindowDrawList();
+        var p   = ImGui.GetCursorScreenPos();
+        var sz  = ImGui.GetContentRegionAvail();
+
+        // Grid dots
+        for (float gx = 0; gx < sz.X; gx += 8f)
+            for (float gy = 0; gy < sz.Y; gy += 8f)
+                dl.AddCircleFilled(new Vector2(p.X + gx, p.Y + gy), 0.7f, 0xFF000000, 4);
+
+        // Dummy button control
+        ImGui.SetCursorPos(new Vector2(50, 50));
+        ImGui.Button("Command1", new Vector2(100, 30));
+
+        // Dummy textbox
+        ImGui.SetCursorPos(new Vector2(50, 100));
+        ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(1,1,1,1));
+        string t1 = "Text1"; ImGui.InputText("##t1", ref t1, 32, ImGuiInputTextFlags.ReadOnly);
+        ImGui.PopStyleColor();
+
+        ImGui.End();
+        ImGui.End(); // MDI host
+    }
+
+    // ── Classic Win95 theme ───────────────────────────────────────────────
+
+    static void ApplyClassicTheme()
+    {
+        var s = ImGui.GetStyle();
+        var c = s.Colors;
+        var bg   = new Vector4(0.831f,0.815f,0.784f,1);
+        var navy = new Vector4(0,0,0.502f,1);
+        var dark = new Vector4(0.502f,0.502f,0.502f,1);
+        var blk  = new Vector4(0,0,0,1);
+        var wht  = new Vector4(1,1,1,1);
+
+        c[(int)ImGuiCol.Text]                 = blk;
         c[(int)ImGuiCol.TextDisabled]         = dark;
         c[(int)ImGuiCol.WindowBg]             = bg;
         c[(int)ImGuiCol.ChildBg]              = bg;
         c[(int)ImGuiCol.PopupBg]              = bg;
-        c[(int)ImGuiCol.Border]               = darker;
-        c[(int)ImGuiCol.BorderShadow]         = light;
-        c[(int)ImGuiCol.FrameBg]              = light;
-        c[(int)ImGuiCol.FrameBgHovered]       = light;
+        c[(int)ImGuiCol.Border]               = new Vector4(0.4f,0.4f,0.4f,1);
+        c[(int)ImGuiCol.BorderShadow]         = wht;
+        c[(int)ImGuiCol.FrameBg]              = wht;
+        c[(int)ImGuiCol.FrameBgHovered]       = wht;
         c[(int)ImGuiCol.FrameBgActive]        = bg;
-        c[(int)ImGuiCol.TitleBg]              = titleBg;
-        c[(int)ImGuiCol.TitleBgActive]        = titleBg;
-        c[(int)ImGuiCol.TitleBgCollapsed]     = titleBg;
+        c[(int)ImGuiCol.TitleBg]              = navy;
+        c[(int)ImGuiCol.TitleBgActive]        = navy;
+        c[(int)ImGuiCol.TitleBgCollapsed]     = navy;
         c[(int)ImGuiCol.MenuBarBg]            = bg;
         c[(int)ImGuiCol.ScrollbarBg]          = bg;
-        c[(int)ImGuiCol.ScrollbarGrab]        = new Vector4(0.75f, 0.75f, 0.75f, 1f);
-        c[(int)ImGuiCol.ScrollbarGrabHovered] = new Vector4(0.85f, 0.85f, 0.85f, 1f);
+        c[(int)ImGuiCol.ScrollbarGrab]        = new Vector4(0.75f,0.75f,0.75f,1);
+        c[(int)ImGuiCol.ScrollbarGrabHovered] = new Vector4(0.85f,0.85f,0.85f,1);
         c[(int)ImGuiCol.ScrollbarGrabActive]  = dark;
-        c[(int)ImGuiCol.CheckMark]            = text;
+        c[(int)ImGuiCol.CheckMark]            = blk;
         c[(int)ImGuiCol.Button]               = bg;
-        c[(int)ImGuiCol.ButtonHovered]        = new Vector4(0.88f, 0.88f, 0.85f, 1f);
-        c[(int)ImGuiCol.ButtonActive]         = new Vector4(0.70f, 0.70f, 0.68f, 1f);
-        c[(int)ImGuiCol.Header]               = sel;
-        c[(int)ImGuiCol.HeaderHovered]        = new Vector4(0.10f, 0.10f, 0.60f, 1f);
-        c[(int)ImGuiCol.HeaderActive]         = sel;
-        c[(int)ImGuiCol.Separator]            = dark;
-        c[(int)ImGuiCol.SeparatorHovered]     = dark;
-        c[(int)ImGuiCol.SeparatorActive]      = text;
-        c[(int)ImGuiCol.ResizeGrip]           = bg;
-        c[(int)ImGuiCol.ResizeGripHovered]    = dark;
-        c[(int)ImGuiCol.ResizeGripActive]     = darker;
+        c[(int)ImGuiCol.ButtonHovered]        = new Vector4(0.88f,0.88f,0.85f,1);
+        c[(int)ImGuiCol.ButtonActive]         = new Vector4(0.70f,0.70f,0.68f,1);
+        c[(int)ImGuiCol.Header]               = navy;
+        c[(int)ImGuiCol.HeaderHovered]        = new Vector4(0.1f,0.1f,0.6f,1);
+        c[(int)ImGuiCol.HeaderActive]         = navy;
         c[(int)ImGuiCol.Tab]                  = bg;
-        c[(int)ImGuiCol.TabHovered]           = new Vector4(0.88f, 0.88f, 0.85f, 1f);
+        c[(int)ImGuiCol.TabHovered]           = new Vector4(0.88f,0.88f,0.85f,1);
         c[(int)ImGuiCol.TabSelected]          = bg;
-        c[(int)ImGuiCol.DockingPreview]       = new Vector4(0.0f, 0.0f, 0.5f, 0.5f);
-        c[(int)ImGuiCol.DockingEmptyBg]       = bg;
-        c[(int)ImGuiCol.TextSelectedBg]       = new Vector4(0.0f, 0.0f, 0.5f, 0.5f);
+        c[(int)ImGuiCol.Separator]            = dark;
+        c[(int)ImGuiCol.TextSelectedBg]       = new Vector4(0,0,0.5f,0.5f);
 
-        style.WindowRounding    = 0f;
-        style.ChildRounding     = 0f;
-        style.FrameRounding     = 0f;
-        style.PopupRounding     = 0f;
-        style.ScrollbarRounding = 0f;
-        style.GrabRounding      = 0f;
-        style.TabRounding       = 0f;
-        style.WindowBorderSize  = 1f;
-        style.FrameBorderSize   = 1f;
-        style.ItemSpacing       = new Vector2(4, 3);
-        style.WindowPadding     = new Vector2(4, 4);
-        style.FramePadding      = new Vector2(4, 2);
+        s.WindowRounding   = 0; s.ChildRounding  = 0; s.FrameRounding  = 0;
+        s.PopupRounding    = 0; s.TabRounding    = 0; s.GrabRounding   = 0;
+        s.WindowBorderSize = 1; s.FrameBorderSize = 1;
+        s.ItemSpacing      = new Vector2(4,3);
+        s.WindowPadding    = new Vector2(4,4);
+        s.FramePadding     = new Vector2(3,2);
     }
 
     protected override void OnMouseMove(in MouseMoveEvent e) { }
